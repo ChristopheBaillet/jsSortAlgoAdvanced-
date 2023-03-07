@@ -61,8 +61,12 @@ function getArrayCsv(csv) {
  * @returns la distance qui sépare la ville de Grenoble
  */
 function distanceFromGrenoble(ville) {
-    console.log('implement me !');
-    return 0;
+    let r = 6384;
+    const grenoble = {
+        longitude: 5.7167,
+        latitude: 45.1667,
+    }
+    return 2 * r * Math.asin(Math.sqrt(h(ville.latitude, ville.longitude, grenoble.latitude, grenoble.longitude)));
 }
 
 /**
@@ -73,69 +77,163 @@ function distanceFromGrenoble(ville) {
  * @return vrai si la ville i est plus proche
  */
 function isLess(i, j) {
-    console.log('implement me !');
-    return true;
+    nbComparaison++;
+    return listVille[i].distanceFromGrenoble < listVille[j].distanceFromGrenoble;
 }
 
 /**
  * interverti la ville i avec la ville j dans la liste des villes
  * @param {*} i 
- * @param {*} j 
+ * @param {*} j
+ * @param listVille
  */
 function swap(i, j) {
-    console.log('implement me !');
+   const temp = listVille[i];
+   listVille[i] = listVille[j];
+   listVille[j] = temp;
+    nbPermutation++
 }
 
 function sort(type) {
     switch (type) {
         case 'insert':
-            insertsort();
+            insertionSort();
             break;
         case 'select':
-            selectionsort();
+            selectionSort();
             break;
         case 'bubble':
-            bubblesort();
+            bubbleSort();
             break;
         case 'shell':
-            shellsort();
+            shellSort();
             break;
         case 'merge':
             mergesort();
             break;
         case 'heap':
-            heapsort();
+            heapSort();
             break;
         case 'quick':
             quicksort();
             break;
+        case 'bubbleOptimized':
+            bubbleSortOptimised();
+            break;
     }
 }
 
-function insertsort() {
-    console.log("insertsort - implement me !");
+function bubbleSortOptimised() {
+    let sorted = false;
+    let passage = 0;
+
+    while (!sorted){
+        sorted = true;
+        for (let i = 0; i < listVille.length - passage - 1; i++){
+            if (isLess(i + 1, i)){
+                swap(i, i + 1);
+                sorted = false;
+            }
+        }
+        passage++;
+        nbComparaison++;
+    }
 }
 
-function selectionsort() {
-    console.log("selectionsort - implement me !");
+function bubbleSort() {
+    let sorted = false;
+
+    while (!sorted){
+        sorted = true;
+        for (let i = 0; i < listVille.length - 1; i++){
+            if (isLess(i + 1, i)){
+                swap(i, i + 1);
+                sorted = false;
+            }
+        }
+        nbComparaison++;
+    }
 }
 
-function bubblesort() {
-    console.log("bubblesort - implement me !");
+function heapSort() {
+    organize();
+    for (let i = listVille.length - 1; i >= 0; i--) {
+        swap(0, i);
+        moveDown(i, 0);
+    }
 }
 
-function shellsort() {
-    console.log("shellsort - implement me !");
+function organize() {
+    for (let i = 0; i < listVille.length; i++) {
+        moveUp(i);
+    }
+}
+
+function moveUp(index) {
+    const roundedIndex = Math.floor(index / 2);
+    if (isLess(roundedIndex, index)) {
+        swap(index, roundedIndex);
+        moveUp(roundedIndex);
+    }
+}
+
+function moveDown(element, index) {
+    const formule = 2 * index + 1;
+    let max;
+    if (formule < element) {
+        max = isLess((2 * index), formule) ? formule : 2 * index;
+        if (isLess(index, max)) {
+            swap(max, index);
+            moveDown(element, max);
+        }
+        nbComparaison++;
+    }
+}
+
+function insertionSort(ecart = 1) {
+    for (let i = ecart; i < listVille.length; i++){
+        const currentValue = listVille[i];
+        let position = i;
+        while (position > ecart - 1 && listVille[position - ecart].distanceFromGrenoble > currentValue.distanceFromGrenoble){
+            listVille[position] = listVille[position - ecart];
+            position = position - ecart;
+            nbPermutation++;
+            nbComparaison++;
+        }
+        listVille[position] = currentValue;
+    }
+}
+
+function selectionSort() {
+    for (let i = 0; i < listVille.length; i++){
+        let minIndex = i;
+        for (let j = i + 1; j < listVille.length; j++){
+            if (isLess(j, minIndex)){
+                minIndex = j;
+            }
+        }
+        swap(i, minIndex)
+    }
+}
+
+function shellSort() {
+    let ecart = 0;
+    while (ecart < listVille.length){
+        ecart = ecart * 3 + 1;
+        nbComparaison++;
+    }
+
+    while (ecart !== 0){
+        ecart = Math.floor(ecart / 3);
+        insertionSort(ecart);
+        nbComparaison++;
+    }
 }
 
 function mergesort() {
     console.log("mergesort - implement me !");
 }
 
-
-function heapsort() {
-    console.log("heapsort - implement me !");
-}
 
 function quicksort() {
     console.log("quicksort - implement me !");
@@ -159,14 +257,27 @@ function displayPermutation(nbPermutation) {
     document.getElementById('permutation').innerHTML = nbPermutation + ' permutations';
 }
 
+function displayComparaison(nbComparaison) {
+    document.getElementById('comparaison').innerHTML = nbComparaison + ' comparaisons';
+}
+
 function displayListVille() {
     document.getElementById("navp").innerHTML = "";
     displayPermutation(nbPermutation);
+    displayComparaison(nbComparaison)
     let mainList = document.getElementById("navp");
-    for (var i = 0; i < listVille.length; i++) {
+    for (let i = 0; i < listVille.length; i++) {
         let item = listVille[i];
         let elem = document.createElement("li");
-        elem.innerHTML = item.nom_commune + " - \t" + Math.round(item.distanceFromGrenoble * 100) / 100 + ' m';
+        elem.innerHTML = item.nom_commune + " - \t" + Math.round(item.distanceFromGrenoble * 10000) / 10000 + ' m';
         mainList.appendChild(elem);
     }
+}
+
+function hav(angle){
+    return (1 - Math.cos(angle)) / 2;
+}
+
+function h(lat1, lon1, lat2, lon2){
+    return hav(lat2-lat1) + Math.cos(lat1) * Math.cos(lat2) * hav(lon2, lon1)
 }
