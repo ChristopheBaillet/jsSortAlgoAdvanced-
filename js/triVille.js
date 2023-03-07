@@ -61,12 +61,23 @@ function getArrayCsv(csv) {
  * @returns la distance qui sépare la ville de Grenoble
  */
 function distanceFromGrenoble(ville) {
-    let r = 6384;
     const grenoble = {
         longitude: 5.7167,
         latitude: 45.1667,
     }
-    return 2 * r * Math.asin(Math.sqrt(h(ville.latitude, ville.longitude, grenoble.latitude, grenoble.longitude)));
+    const [lon2, lat2, lon1, lat1] = [grenoble.longitude, grenoble.latitude, ville.longitude, ville.latitude]
+    const R = 6371; // metres
+    const φ1 = lat1 * Math.PI/180; // φ, λ in radians
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+        Math.cos(φ1) * Math.cos(φ2) *
+        Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // in kilometers
 }
 
 /**
@@ -269,15 +280,7 @@ function displayListVille() {
     for (let i = 0; i < listVille.length; i++) {
         let item = listVille[i];
         let elem = document.createElement("li");
-        elem.innerHTML = item.nom_commune + " - \t" + Math.round(item.distanceFromGrenoble * 10000) / 10000 + ' m';
+        elem.innerHTML = item.nom_commune + " - \t" + Math.round(item.distanceFromGrenoble * 100) / 100 + ' km';
         mainList.appendChild(elem);
     }
-}
-
-function hav(angle){
-    return (1 - Math.cos(angle)) / 2;
-}
-
-function h(lat1, lon1, lat2, lon2){
-    return hav(lat2-lat1) + Math.cos(lat1) * Math.cos(lat2) * hav(lon2, lon1)
 }
